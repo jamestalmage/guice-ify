@@ -1,4 +1,5 @@
 /WEB-INF$
 /target$
 .*\.iml
-/\.idea$
+^\.idea/
+/ignorethis$
