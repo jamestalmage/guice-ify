@@ -1,1 +1,1 @@
-com.googlecode.objectify.guice.processor.EntityProcessor
+com.googlecode.objectify.guice.processor.ObjectifyRegistryProcessor
