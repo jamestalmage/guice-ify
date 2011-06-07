@@ -107,6 +107,8 @@
         </dependencies>
     </dependencyManagement>
 
+
+
     <build>
         <extensions>
             <extension>
@@ -115,8 +117,14 @@
                 <version>1.5</version>
             </extension>
         </extensions>
+
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -131,7 +139,7 @@
         </pluginManagement>
     </build>
 
-	<repositories>
+    <repositories>
 		<repository>
 			<id>objectify-appengine</id>
 			<url>http://objectify-appengine.googlecode.com/svn/maven</url>
