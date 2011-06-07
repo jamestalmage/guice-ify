@@ -11,7 +11,7 @@
     <version>0.1-SNAPSHOT</version>
     <modules>
         <module>objectify-guice</module>
-        <module>objectify-guice-tests</module>
+        <module>objectify-guice-example</module>
     </modules>
 
     <description>
