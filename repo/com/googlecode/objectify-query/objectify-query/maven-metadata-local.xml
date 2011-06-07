@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.googlecode.objectify-query</groupId>
+  <artifactId>objectify-query</artifactId>
+  <version>0.2.jrt-SNAPSHOT</version>
+  <versioning>
+    <versions>
+      <version>0.2.jrt-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20110607210008</lastUpdated>
+  </versioning>
+</metadata>
