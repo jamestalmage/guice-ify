@@ -1,0 +1,135 @@
+Index: src/main/java/com/googlecode/objectify/query/shared/ListPage.java
+===================================================================
+--- src/main/java/com/googlecode/objectify/query/shared/ListPage.java	(revision 31:e4298668beb7)
++++ src/main/java/com/googlecode/objectify/query/shared/ListPage.java	(revision 31+:e4298668beb7+)
+@@ -27,14 +27,13 @@
+ 
+ package com.googlecode.objectify.query.shared;
+ 
++import java.io.Serializable;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.ListIterator;
+ import java.util.RandomAccess;
+ 
+-import com.google.gwt.user.client.rpc.IsSerializable;
+-
+ /**
+  * A "page" of results returned from an objectify-query generated query object.
+  * <p/>
+@@ -50,7 +49,7 @@
+  *
+  * @param <Entity_> 
+  */
+-public class ListPage<Entity_> implements Iterable<Entity_>, RandomAccess, IsSerializable {
++public class ListPage<Entity_> implements Iterable<Entity_>, RandomAccess, Serializable {
+ 
+ 	private ArrayList<Entity_> list;
+ 	private String cursor;
+Index: pom.xml
+===================================================================
+--- pom.xml	(revision 31:e4298668beb7)
++++ pom.xml	(revision 31+:e4298668beb7+)
+@@ -10,7 +10,7 @@
+ 	<modelVersion>4.0.0</modelVersion>
+ 	<groupId>com.googlecode.objectify-query</groupId>
+ 	<artifactId>objectify-query</artifactId>
+-	<version>0.2-SNAPSHOT</version>
++	<version>0.2.jrt-SNAPSHOT</version>
+ 	<packaging>jar</packaging>
+ 
+ 	<name>objectify-query</name>
+@@ -149,15 +149,8 @@
+ 			<artifactId>objectify</artifactId>
+ 			<version>${objectify-appengine.version}</version>
+ 		</dependency>
+-
++		
+ 		<dependency>
+-			<groupId>com.google.gwt</groupId>
+-			<artifactId>gwt-user</artifactId>
+-			<version>${gwt.version}</version>
+-			<scope>provided</scope>
+-		</dependency>
+-		
+-		<dependency>
+ 			<groupId>javax.persistence</groupId>
+ 			<artifactId>persistence-api</artifactId>
+ 			<version>1.0</version>
+Index: src/main/java/com/googlecode/objectify/query/processor/EntityProcessor.java
+===================================================================
+--- src/main/java/com/googlecode/objectify/query/processor/EntityProcessor.java	(revision 31:e4298668beb7)
++++ src/main/java/com/googlecode/objectify/query/processor/EntityProcessor.java	(revision 31+:e4298668beb7+)
+@@ -15,12 +15,12 @@
+ import javax.lang.model.element.ExecutableElement;
+ import javax.lang.model.element.TypeElement;
+ import javax.lang.model.element.VariableElement;
++import javax.lang.model.element.Name;
+ import javax.lang.model.type.DeclaredType;
+ import javax.lang.model.util.ElementFilter;
+ import javax.persistence.Transient;
+ import javax.tools.Diagnostic.Kind;
+ 
+-import com.googlecode.objectify.annotation.Entity;
+ import com.googlecode.objectify.annotation.Indexed;
+ import com.googlecode.objectify.annotation.NotSaved;
+ import com.googlecode.objectify.annotation.Parent;
+@@ -28,16 +28,19 @@
+ import com.googlecode.objectify.query.annotation.List;
+ import com.googlecode.objectify.query.annotation.List.KeyType;
+ 
+-@SupportedAnnotationTypes("com.googlecode.objectify.annotation.Entity")
++@SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
+ @SupportedSourceVersion(RELEASE_6)
+ public class EntityProcessor extends AbstractProcessor {
+ 
+   private ProcessingEnvironment env;
++  boolean guice;
+ 
+   @Override
+   public synchronized void init(ProcessingEnvironment env) {
+     super.init(env);
+ 
++    guice =  env.getElementUtils().getTypeElement("com.google.inject.Inject") != null;
++
+     this.env = env;
+   }
+ 
+@@ -49,8 +52,9 @@
+ 
+       for (TypeElement currAnnotation : annotations) {
+ 
+-        if (currAnnotation.getQualifiedName().contentEquals(
+-            Entity.class.getName())) {
++          final Name qualifiedName = currAnnotation.getQualifiedName();
++          if (qualifiedName.contentEquals("com.googlecode.objectify.annotation.Entity")
++                  || qualifiedName.contentEquals("javax.persistence.Entity")) {
+ 
+           for (Element entity : roundEnv.getElementsAnnotatedWith(currAnnotation)) {
+             this.processEntity(entity);
+@@ -61,7 +65,7 @@
+ 
+     }
+ 
+-    return true;
++    return false;
+   }
+ 
+   private void processEntity(Element entityElement) {
+@@ -97,6 +101,7 @@
+       out.println("import com.googlecode.objectify.ObjectifyOpts;");
+       out.println("import com.googlecode.objectify.ObjectifyService;");
+       out.println("import com.googlecode.objectify.Query;");
++      if(guice) out.println("import com.google.inject.Inject;");
+       try {
+         // objectify 3.x
+         Class.forName("com.googlecode.objectify.util.QueryWrapper");
+@@ -121,6 +126,7 @@
+       out.println("  private final Query<" + entityName + "> query;");
+       out.println("  private Objectify lazyOfy;");
+       out.println();
++      if(guice) out.println("  @Inject");
+       out.println("  public " + queryName + "(Query<" + entityName
+           + "> query) {");
+       out.println("    super(query);");
