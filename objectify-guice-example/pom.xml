@@ -114,6 +114,7 @@
     <repositories>
         <repository>
             <id>objectify-guice repo</id>
+            <name>guice-ify repository (googlecode/mercurial hosted)</name>
             <url>http://guice-ify.googlecode.com/hg/repo/</url>
             <layout>default</layout>
         </repository>
