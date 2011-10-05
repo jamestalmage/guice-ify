@@ -101,10 +101,4 @@ public abstract class EntityProcessor extends AbstractProcessor{
         }
     }
 
-    String capitalize(String s){
-        StringBuilder sb = new StringBuilder();
-        sb.append(Character.toUpperCase(s.charAt(0)));
-        sb.append(s.substring(1));
-        return sb.toString();
-    }
 }

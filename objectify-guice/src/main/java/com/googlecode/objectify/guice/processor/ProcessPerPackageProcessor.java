@@ -36,9 +36,5 @@ public abstract class ProcessPerPackageProcessor extends EntityProcessor {
         }
     }
 
-    String uniqueNameFromPackage(String pkg,String suffix){
-        return capitalize(pkg.substring(pkg.lastIndexOf(".")+1))+suffix;
-    }
-
     protected abstract void processPackage(String pkg);
 }

@@ -105,6 +105,7 @@
                         <processor>com.googlecode.objectify.query.processor.EntityProcessor</processor>
                         <processor>com.googlecode.objectify.guice.processor.GuiceModuleBuilder</processor>
                         <processor>com.googlecode.objectify.guice.processor.ObjectifyRegistryProcessor</processor>
+                        <processor>com.googlecode.objectify.guice.processor.ObjectifyEntitiesProcessor</processor>
                     </annotationProcessors>
                 </configuration>
             </plugin>

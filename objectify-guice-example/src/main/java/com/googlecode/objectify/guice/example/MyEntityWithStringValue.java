@@ -16,29 +16,40 @@
 
 package com.googlecode.objectify.guice.example;
 
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.googlecode.objectify.Query;
-
-import java.util.List;
-
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * User: jamestalmage
- * Date: 6/7/11
- * Time: 1:27 PM
+ * Date: 10/5/11
+ * Time: 1:10 AM
  */
-public class ListEntitiesByKey {
-    @Inject
-    Query<MyEntity> query;
+@Entity
+public class MyEntityWithStringValue {
 
-
-    public List<MyEntity> get(){
-        return query.order("key").list();
+    public MyEntityWithStringValue() {
     }
 
-    public Query<MyEntity> getQuery() {
-        return query;
+    public MyEntityWithStringValue(Long id, MyStringValue value) {
+        this.id = id;
+        this.value = value;
+    }
+
+    public MyEntityWithStringValue(MyStringValue value) {
+        this.value = value;
+    }
+
+    @Id
+    Long id;
+
+
+    MyStringValue value;
+
+    public MyStringValue getValue() {
+        return value;
+    }
+
+    public void setValue(MyStringValue value) {
+        this.value = value;
     }
 }

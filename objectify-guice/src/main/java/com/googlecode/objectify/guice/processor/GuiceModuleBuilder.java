@@ -16,6 +16,9 @@
 
 package com.googlecode.objectify.guice.processor;
 
+import com.googlecode.objectify.guice.AbstractQueryModule;
+import com.googlecode.objectify.guice.ClassNameUtils;
+
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
@@ -33,7 +36,7 @@ public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
 
     @Override
     protected void processPackage(final String pkg) {
-        final String className = uniqueNameFromPackage(pkg,"QueryModule");
+        final String className = ClassNameUtils.uniqueNameFromPackage(pkg, AbstractQueryModule.SUFFIX);
 
         getPrintWriter(pkg+"."+className,null,new Callback<PrintWriter>() {
             @Override

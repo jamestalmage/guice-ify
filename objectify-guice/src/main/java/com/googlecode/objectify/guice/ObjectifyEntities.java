@@ -14,31 +14,16 @@
  *    limitations under the License.
  */
 
-package com.googlecode.objectify.guice.example;
-
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.googlecode.objectify.Query;
-
-import java.util.List;
+package com.googlecode.objectify.guice;
 
 
 /**
  * User: jamestalmage
- * Date: 6/7/11
- * Time: 1:27 PM
+ * Date: 10/4/11
+ * Time: 8:53 PM
  */
-public class ListEntitiesByKey {
-    @Inject
-    Query<MyEntity> query;
+public interface ObjectifyEntities {
+    String SUFFIX = "ObjectifyEntities";
 
-
-    public List<MyEntity> get(){
-        return query.order("key").list();
-    }
-
-    public Query<MyEntity> getQuery() {
-        return query;
-    }
+    public Iterable<? extends Class> getEntityClasses();
 }

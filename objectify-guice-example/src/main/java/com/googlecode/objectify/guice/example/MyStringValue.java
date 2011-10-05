@@ -16,29 +16,20 @@
 
 package com.googlecode.objectify.guice.example;
 
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.googlecode.objectify.Query;
-
-import java.util.List;
-
-
 /**
  * User: jamestalmage
- * Date: 6/7/11
- * Time: 1:27 PM
+ * Date: 10/5/11
+ * Time: 1:03 AM
  */
-public class ListEntitiesByKey {
-    @Inject
-    Query<MyEntity> query;
+public class MyStringValue {
+    String value;
 
-
-    public List<MyEntity> get(){
-        return query.order("key").list();
+    public MyStringValue(String value) {
+        this.value = value;
     }
 
-    public Query<MyEntity> getQuery() {
-        return query;
+    @Override
+    public String toString() {
+        return value;
     }
 }

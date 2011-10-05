@@ -27,6 +27,7 @@ import com.googlecode.objectify.Query;
  * Time: 4:06 PM
  */
 public abstract class AbstractQueryModule extends AbstractModule {
+    public static final String SUFFIX = "QueryModule";
     Provider<Objectify> provider;
     @Override
     protected final void configure() {
@@ -35,7 +36,7 @@ public abstract class AbstractQueryModule extends AbstractModule {
     }
 
     protected <T> void bindQuery(TypeLiteral<Query<T>> typeLiteral, Class<T> clazz){
-        bind(typeLiteral).toProvider(new QueryProvider<T>(provider,clazz));
+        bind(typeLiteral).toProvider(new QueryProvider<T>(provider, clazz));
     }
 
     protected abstract void config();
