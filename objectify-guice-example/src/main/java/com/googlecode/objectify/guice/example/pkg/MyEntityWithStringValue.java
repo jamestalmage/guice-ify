@@ -14,7 +14,9 @@
  *    limitations under the License.
  */
 
-package com.googlecode.objectify.guice.example;
+package com.googlecode.objectify.guice.example.pkg;
+
+import com.googlecode.objectify.guice.example.MyStringValue;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

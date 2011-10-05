@@ -24,6 +24,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.guice.ObjectifyListenerModule;
+import com.googlecode.objectify.guice.example.pkg.MyEntityWithStringValue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +87,12 @@ public class ListenerBasedExampleTest {
                     @Override
                     protected void configurePackages() {
                         bindPackages("com.googlecode.objectify.guice.example");
+                    }
+                },
+                new ObjectifyListenerModule() {
+                    @Override
+                    protected void configurePackages() {
+                        bindPackages("com.googlecode.objectify.guice.example.pkg");
                     }
                 });
         objectify = injector.getProvider(Objectify.class);

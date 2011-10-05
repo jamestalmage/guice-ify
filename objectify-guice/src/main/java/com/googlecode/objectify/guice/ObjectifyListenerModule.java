@@ -17,6 +17,7 @@
 package com.googlecode.objectify.guice;
 
 import com.google.inject.*;
+import com.google.inject.internal.UniqueAnnotations;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
@@ -28,10 +29,12 @@ import com.googlecode.objectify.impl.conv.Conversions;
 import com.googlecode.objectify.impl.conv.Converter;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.FINEST;
 
 /**
  * User: jamestalmage
@@ -40,41 +43,115 @@ import java.util.Set;
  */
 public abstract class ObjectifyListenerModule extends AbstractModule{
 
+    static Logger logger = Logger.getLogger(ObjectifyListenerModule.class.getName());
+    static {
+        logger.setLevel(FINEST);
+    }
+
+    static class InternalModule implements Module {
+        List<Class> excplicityBound;
+        List<Class<? extends ObjectifyEntities>> ofyEntities;
+        List<Class<? extends Converter>> converters;
+
+
+
+        @Override
+        public void configure( Binder binder) {
+            excplicityBound = new ArrayList<Class>();
+            ofyEntities = new ArrayList<Class<? extends ObjectifyEntities>>();
+            converters = new ArrayList<Class<? extends Converter>>();
+
+
+
+            binder.bindListener(Matchers.any(), new TypeListener() {
+                @Override
+                public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
+                    final Class<? super I> rawType = type.getRawType();
+                    if (hasEntityAnnotation(rawType)) {
+                        if(logger.isLoggable(FINEST)){
+                            logger.finest("Listener explicitly adding: " + rawType.getName());
+                        }
+                        excplicityBound.add(rawType);
+                    }
+                    if (ObjectifyEntities.class.isAssignableFrom(rawType)) {
+                        if(logger.isLoggable(FINEST)){
+                            logger.finest("Listener adding entities: " + rawType.getName());
+                        }
+                        ofyEntities.add((Class<? extends ObjectifyEntities>) rawType);
+                    }
+                    if (Converter.class.isAssignableFrom(rawType)) {
+                        if(logger.isLoggable(FINEST)){
+                            logger.finest("Listener converter: " + rawType.getName());
+                        }
+                        converters.add((Class<? extends Converter>) rawType);
+                    }
+                }
+            });
+        }
+
+
+
+        @Provides
+        @Singleton
+        public ObjectifyFactory factory(Injector injector){
+            System.out.println("Building Factory");
+            final ObjectifyFactory factory = new ObjectifyFactory();
+            final Conversions conversions = factory.getConversions();
+
+            for (Class c : excplicityBound) {
+                if(logger.isLoggable(FINEST)){
+                    logger.finest("Explicitly Binding: " + c.getName() );
+                }
+                factory.register(c);
+            }
+            for (Class<? extends ObjectifyEntities> ofyEntityClass : ofyEntities) {
+                final Iterable<? extends Class> entityClasses
+                        = injector.getInstance(ofyEntityClass).getEntityClasses();
+                for (Class entityClass : entityClasses) {
+                    if(logger.isLoggable(FINEST)){
+                        logger.finest("Binding: " + entityClass);
+                    }
+                    factory.register(entityClass);
+                }
+            }
+            for (Class<? extends Converter> converter : converters) {
+                if(logger.isLoggable(FINEST)){
+                    logger.finest("Binding Converter: " + converter.getName());
+                }
+                conversions.add(injector.getInstance(converter));
+            }
+            return factory;
+        }
+
+        @Provides
+        public Objectify ofy(ObjectifyFactory factory){
+            return factory.begin();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof InternalModule;
+        }
+
+        @Override
+        public int hashCode() {
+            return InternalModule.class.hashCode();
+        }
+    }
+
     static final Class<? extends Annotation> javaxEntity;
     static {
         javaxEntity = ClassNameUtils.loadClass("javax.persistence.Entity");
     }
 
-    Set<Class> explicityBoundEntities = new HashSet<Class>();
-    Set<TypeLiteral<? extends ObjectifyEntities>> entitiesSet = new HashSet<TypeLiteral<? extends ObjectifyEntities>>();
-    Set<TypeLiteral<? extends Converter>> converters = new HashSet<TypeLiteral<? extends Converter>>();
-    @Override
-    protected void bindListener(Matcher<? super TypeLiteral<?>> typeMatcher, TypeListener listener) {
-        super.bindListener(typeMatcher, listener);
-    }
 
-    boolean hasEntityAnnotation(Class c){
+    static boolean hasEntityAnnotation(Class c){
         return c.isAnnotationPresent(javaxEntity) || c.isAnnotationPresent(Entity.class);
     }
 
     @Override
     protected final void configure() {
-        bindListener(Matchers.any(),new TypeListener() {
-            @Override
-            public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
-                final Class<? super I> rawType = type.getRawType();
-
-                if(hasEntityAnnotation(rawType)){
-                    explicityBoundEntities.add(rawType);
-                }
-                if(ObjectifyEntities.class.isAssignableFrom(rawType)){
-                    entitiesSet.add((TypeLiteral<? extends ObjectifyEntities>) type);
-                }
-                if(Converter.class.isAssignableFrom(rawType)){
-                    converters.add((TypeLiteral<? extends Converter>) type);
-                }
-            }
-        });
+        install(new InternalModule());
         configurePackages();
     }
 
@@ -101,48 +178,19 @@ public abstract class ObjectifyListenerModule extends AbstractModule{
         if(clzz != null){
             if(Module.class.isAssignableFrom(clzz)){
                 try {
-                    //System.out.println("INSTALLING: " + clzz.getName());
+                    logger.info("INSTALLING: " + clzz.getName());
                     install((Module) clzz.newInstance());
                 } catch (Exception e) {
                     addError("Trouble instantiating: " + clzz.getName(),e);
                 }
             }
             else {
-                //System.out.println("BINDING: " + clzz.getName());
+                logger.info("BINDING: " + clzz.getName());
                 bind(clzz);
             }
         }
         else {
-            //System.out.println(ClassNameUtils.uniqeFullNameFromPackage(pkg,suffix) + " NOT FOUND");
+            System.out.println(ClassNameUtils.uniqeFullNameFromPackage(pkg,suffix) + " NOT FOUND");
         }
-    }
-
-    @Provides
-    @Singleton
-    public ObjectifyFactory factory(Injector injector){
-        final ObjectifyFactory factory = new ObjectifyFactory();
-        final Conversions conversions = factory.getConversions();
-
-
-        for (TypeLiteral<? extends Converter> converter : converters) {
-            System.out.println("ADDING CONVERTER:" + converter.getClass());
-            final Converter converterInstance = injector.getInstance(Key.get(converter));
-            conversions.add(converterInstance);
-        }
-        for (TypeLiteral<? extends ObjectifyEntities> entities : entitiesSet) {
-            Iterable<? extends Class> entityClasses = injector.getInstance(Key.get(entities)).getEntityClasses();
-            for (Class<?> entityClass : entityClasses) {
-                factory.register(entityClass);
-            }
-        }
-        for (Class entity : explicityBoundEntities) {
-            factory.register(entity);
-        }
-        return factory;
-    }
-
-    @Provides
-    public Objectify ofy(ObjectifyFactory factory){
-        return factory.begin();
     }
 }
