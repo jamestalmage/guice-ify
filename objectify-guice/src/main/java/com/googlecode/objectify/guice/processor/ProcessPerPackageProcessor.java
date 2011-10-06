@@ -25,16 +25,40 @@ import java.util.Set;
  * Time: 10:52 PM
  */
 public abstract class ProcessPerPackageProcessor extends EntityProcessor {
-    Set<String> processed = new HashSet<String>();
 
+    @Override
     void postprocessEntities() {
-        for(String pkg:entities.packages()){
-            if(!processed.contains(pkg)){
-                processed.add(pkg);
-                processPackage(pkg);
+        postprocessEntities(mergeAll(),getProcessors());
+    }
+
+    protected Entities mergeAll() {
+        return Entities.merge(entitiesMap.values());
+    }
+
+    void postprocessEntities(Entities entities,Iterable<? extends PackageProcessor> processors) {
+
+        for (PackageProcessor processor : processors) {
+            for(String pkg:entities.packages()){
+                if(!getTracker().isProcessed(processor,pkg)){
+                    processor.processPackage(entities, pkg, this);
+                    getTracker().markAsProcessed(processor,pkg);
+                }
             }
         }
     }
 
-    protected abstract void processPackage(String pkg);
+    ProcessedTracker tracker = null;
+    public ProcessedTracker getTracker(){
+        if(tracker == null){
+            tracker = createTracker();
+        }
+        return tracker;
+    }
+
+    private ProcessedTracker createTracker() {
+        return new IdentityProcessedTracker();
+    }
+
+    protected abstract Iterable<? extends PackageProcessor> getProcessors();
+    //protected abstract void processPackage(Entities entities,String pkg);
 }

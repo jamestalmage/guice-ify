@@ -22,6 +22,8 @@ import com.googlecode.objectify.guice.ClassNameUtils;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import static javax.lang.model.SourceVersion.RELEASE_6;
 
@@ -34,27 +36,36 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 @SupportedSourceVersion(RELEASE_6)
 public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
 
+    private List<MyPackageProcessor> processors = Arrays.asList(new MyPackageProcessor());
+
     @Override
-    protected void processPackage(final String pkg) {
-        final String className = ClassNameUtils.uniqueNameFromPackage(pkg, AbstractQueryModule.SUFFIX);
+    protected Iterable<? extends PackageProcessor> getProcessors() {
+        return processors;
+    }
 
-        getPrintWriter(pkg+"."+className,null,new Callback<PrintWriter>() {
-            @Override
-            public void call(PrintWriter out) throws Exception {
-                out.println("package " + pkg + ";");
-                out.println();
-                out.println("public class " + className + " extends com.googlecode.objectify.guice.AbstractQueryModule{");
-                out.println();
-                out.println("  @Override");
-                out.println("  protected void config() {");
-                for (String s : Entities.stripNames(entities.entitiesInPackage(pkg),true)) {
-                    out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<"+s+">>(){},"+s+".class);");
+    static class MyPackageProcessor implements PackageProcessor {
+        @Override
+        public void processPackage(final Entities entities,final String pkg,PrintWriterFetcher fetcher) {
+            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, AbstractQueryModule.SUFFIX);
+
+            fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
+                @Override
+                public void call(PrintWriter out) throws Exception {
+                    out.println("package " + pkg + ";");
+                    out.println();
+                    out.println("public class " + className + " extends com.googlecode.objectify.guice.AbstractQueryModule{");
+                    out.println();
+                    out.println("  @Override");
+                    out.println("  protected void config() {");
+                    for (String s : Entities.stripNames(entities.entitiesInPackage(pkg), true)) {
+                        out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<" + s + ">>(){}," + s + ".class);");
+                    }
+                    out.println("  }");
+                    out.println();
+
+                    out.println("}");
                 }
-                out.println("  }");
-                out.println();
-
-                out.println("}");
-            }
-        });
+            });
+        }
     }
 }

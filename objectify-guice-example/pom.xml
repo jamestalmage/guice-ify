@@ -102,14 +102,25 @@
                     <source>1.6</source>
                     <target>1.6</target>
                     <annotationProcessors>
+
                         <processor>com.googlecode.objectify.query.processor.EntityProcessor</processor>
-                        <processor>com.googlecode.objectify.guice.processor.GuiceModuleBuilder</processor>
+                        <processor>com.googlecode.objectify.guice.processor.CombinedProcessor</processor>
+                        <processor>com.googlecode.objectify.guice.processor.ObjectifyModuleBuilder</processor>
+                        <!--<processor>com.googlecode.objectify.guice.processor.GuiceModuleBuilder</processor>
                         <processor>com.googlecode.objectify.guice.processor.ObjectifyRegistryProcessor</processor>
-                        <processor>com.googlecode.objectify.guice.processor.ObjectifyEntitiesProcessor</processor>
+                        <processor>com.googlecode.objectify.guice.processor.ObjectifyEntitiesProcessor</processor>  -->
                     </annotationProcessors>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>never</forkMode>
+                </configuration>
+            </plugin>
         </plugins>
+
     </build>
 
     <repositories>

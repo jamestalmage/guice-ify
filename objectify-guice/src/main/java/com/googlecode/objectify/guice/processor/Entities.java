@@ -28,6 +28,34 @@ import java.util.*;
 class Entities {
     Map<String,Set<Info>> map = new HashMap<String, Set<Info>>();
 
+
+    Entities() {
+    }
+
+    private Entities(Iterable<Entities> entities){
+        for(Entities en: entities){
+            for (Map.Entry<String, Set<Info>> entry : en.map.entrySet()) {
+                for (Info info : entry.getValue()) {
+                    put(info);
+                }
+            }
+        }
+    }
+
+    private Entities(Entities ... entities) {
+        this(Arrays.asList(entities));
+    }
+
+    public static Entities merge(Entities ... entities){
+        return new Entities(entities);
+    }
+
+    public static Entities merge(Iterable <Entities> entities){
+        return new Entities(entities);
+    }
+
+
+
     void put(Element entity, ProcessingEnvironment env){
         put(new Info(entity,env));
     }
@@ -53,7 +81,12 @@ class Entities {
     }
 
     Set<Info> entitiesInPackage(String packageName){
-        return map.get(packageName);
+        if(map.containsKey(packageName)){
+            return map.get(packageName);
+        }
+        else {
+            return Collections.emptySet();
+        }
     }
 
     Set<Info> allEntities(){

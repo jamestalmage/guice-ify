@@ -16,6 +16,7 @@
 
 package com.googlecode.objectify.guice.example;
 
+import com.googlecode.objectify.guice.IsConverter;
 import com.googlecode.objectify.impl.conv.Converter;
 import com.googlecode.objectify.impl.conv.ConverterLoadContext;
 import com.googlecode.objectify.impl.conv.ConverterSaveContext;
@@ -25,6 +26,7 @@ import com.googlecode.objectify.impl.conv.ConverterSaveContext;
  * Date: 10/5/11
  * Time: 1:04 AM
  */
+@IsConverter
 public class MyStringValueConverter implements Converter{
     @Override
     public Object forDatastore(Object value, ConverterSaveContext ctx) {
