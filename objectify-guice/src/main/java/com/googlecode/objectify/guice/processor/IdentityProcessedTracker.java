@@ -26,7 +26,7 @@ import java.util.Set;
  * Date: 10/5/11
  * Time: 9:27 PM
  */
-public class IdentityProcessedTracker implements ProcessedTracker{
+class IdentityProcessedTracker implements ProcessedTracker{
     Map<PackageProcessor, Set<String>> map = new IdentityHashMap<PackageProcessor, Set<String>>();
 
     @Override

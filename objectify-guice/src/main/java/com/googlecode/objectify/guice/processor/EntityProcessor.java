@@ -36,9 +36,7 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  * Date: 6/1/11
  * Time: 7:40 PM
  */
-@SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
-@SupportedSourceVersion(RELEASE_6)
-public abstract class EntityProcessor extends AbstractProcessor implements PrintWriterFetcher {
+abstract class EntityProcessor extends AbstractProcessor implements PrintWriterFetcher {
 
     ProcessingEnvironment env;
     //Entities entities = new Entities();

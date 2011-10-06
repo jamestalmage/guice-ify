@@ -24,7 +24,7 @@ import java.util.Set;
  * Date: 6/2/11
  * Time: 10:52 PM
  */
-public abstract class ProcessPerPackageProcessor extends EntityProcessor {
+abstract class ProcessPerPackageProcessor extends EntityProcessor {
 
     @Override
     void postprocessEntities() {

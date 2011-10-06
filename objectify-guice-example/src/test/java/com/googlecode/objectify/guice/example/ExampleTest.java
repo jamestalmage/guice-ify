@@ -71,7 +71,11 @@ public class ExampleTest {
                     protected void configure() {
                         bind(Objectify.class).toProvider(new ObjectifyProvider());
                     }
-                }, new ExampleQueryModule());
+                   /*
+                   Adding ExampleQueryModule twice here is intentional
+                   we've implemented equals and hash code in such a way that the second instance is ignored
+                    */
+                }, new ExampleQueryModule(),new ExampleQueryModule());
         objectify = injector.getProvider(Objectify.class);
         objectify.get().put(
                 new MyEntity("b", "World, "),

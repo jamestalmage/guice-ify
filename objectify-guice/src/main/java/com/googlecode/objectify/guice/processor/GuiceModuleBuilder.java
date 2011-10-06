@@ -53,19 +53,25 @@ public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
                 public void call(PrintWriter out) throws Exception {
                     out.println("package " + pkg + ";");
                     out.println();
-                    out.println("public class " + className + " extends com.googlecode.objectify.guice.AbstractQueryModule{");
+                    out.println("public final class " + className + " extends com.google.inject.AbstractModule {");
                     out.println();
                     out.println("  @Override");
-                    out.println("  protected void config() {");
-                    for (String s : Entities.stripNames(entities.entitiesInPackage(pkg), true)) {
-                        out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<" + s + ">>(){}," + s + ".class);");
-                    }
-                    out.println("  }");
+                    out.println("  public void configure() {}");
                     out.println();
+
+                    for (Entities.Info info : entities.entitiesInPackage(pkg)) {
+
+                        final String name = info.getName();
+                        WriterUtils.printProvidesQueryMethod(out, name);
+                        //out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<" + s + ">>(){}," + s + ".class);");
+                    }
+
+                    WriterUtils.printModuleEqualsAndHashCode(out, className);
 
                     out.println("}");
                 }
             });
         }
+
     }
 }

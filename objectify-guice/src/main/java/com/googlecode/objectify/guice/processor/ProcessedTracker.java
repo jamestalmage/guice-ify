@@ -21,7 +21,7 @@ package com.googlecode.objectify.guice.processor;
  * Date: 10/5/11
  * Time: 9:25 PM
  */
-public interface ProcessedTracker {
-    public void markAsProcessed(PackageProcessor processor, String pkg);
-    public boolean isProcessed(PackageProcessor processor, String pkg);
+interface ProcessedTracker {
+    void markAsProcessed(PackageProcessor processor, String pkg);
+    boolean isProcessed(PackageProcessor processor, String pkg);
 }

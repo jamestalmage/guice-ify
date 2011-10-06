@@ -21,6 +21,6 @@ package com.googlecode.objectify.guice.processor;
  * Date: 6/2/11
  * Time: 10:24 PM
  */
-public interface Callback<T> {
+interface Callback<T> {
     void call(T input) throws Exception;
 }
