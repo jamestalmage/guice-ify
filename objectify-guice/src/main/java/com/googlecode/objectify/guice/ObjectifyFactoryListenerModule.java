@@ -25,8 +25,7 @@ import com.googlecode.objectify.impl.conv.Conversions;
 import com.googlecode.objectify.impl.conv.Converter;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.FINEST;
@@ -47,19 +46,31 @@ public final class ObjectifyFactoryListenerModule implements Module {
 
     static final Class<? extends Annotation> javaxEntity;
     static {
-        javaxEntity = ClassNameUtils.loadClass("javax.persistence.Entity");
+        Class clz;
+        try {
+            clz = (Class<? extends Annotation>) Class.forName("javax.persistence.Entity");
+        } catch (ClassNotFoundException e) {
+            clz = null;
+        }
+        javaxEntity = clz;
     }
 
 
     static boolean hasEntityAnnotation(Class c){
-        return c.isAnnotationPresent(javaxEntity) || c.isAnnotationPresent(Entity.class);
+        return (javaxEntity != null && c.isAnnotationPresent(javaxEntity)) || c.isAnnotationPresent(Entity.class);
     }
 
     public static void bindEntities(Binder binder,Class ... classes){
+        final List<Class> list = Collections.unmodifiableList(Arrays.asList(classes));
         binder
                 .bind(ObjectifyEntities.class)
                 .annotatedWith(UniqueAnnotations.create())
-                .toInstance(new ObjectifyEntitiesImpl(classes));
+                .toInstance(new ObjectifyEntities() {
+                    @Override
+                    public Iterable<? extends Class> getEntityClasses() {
+                        return list;
+                    }
+                });
     }
 
     public static void bindConverters(Binder binder, Class<? extends Converter> ... converters){

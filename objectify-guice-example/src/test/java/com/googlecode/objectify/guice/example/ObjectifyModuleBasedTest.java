@@ -18,12 +18,10 @@ package com.googlecode.objectify.guice.example;
 
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.googlecode.objectify.Objectify;
-import com.googlecode.objectify.guice.ObjectifyListenerModule;
 import com.googlecode.objectify.guice.example.pkg.MyEntityWithStringValue;
 import com.googlecode.objectify.guice.example.pkg.PkgObjectifyModule;
 import org.junit.After;

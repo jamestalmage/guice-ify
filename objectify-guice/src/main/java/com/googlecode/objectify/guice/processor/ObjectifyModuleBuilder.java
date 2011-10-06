@@ -16,8 +16,6 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import com.googlecode.objectify.guice.ClassNameUtils;
-
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 
@@ -27,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.googlecode.objectify.guice.processor.WriterUtils.*;
 import static javax.lang.model.SourceVersion.RELEASE_6;
 
 /**
@@ -57,11 +56,11 @@ public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
         @Override
         public void processPackage(final Entities entities, final String pkg, PrintWriterFetcher fetcher) {
 
-            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, "ObjectifyModule");
+            final String className = uniqueNameFromPackage(pkg, "ObjectifyModule");
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
-                    WriterUtils.printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
+                    printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
                     final List<String> names = Entities.stripNames(entities.entitiesInPackage(pkg), false);
 
                     out.println("  @Override");
@@ -69,14 +68,14 @@ public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
                     out.println("    install(new com.googlecode.objectify.guice.ObjectifyFactoryListenerModule());");
                     if(!names.isEmpty()){
                         out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindEntities(binder(),");
-                        WriterUtils.join(out,"      ",".class",names);
+                        join(out, "      ", ".class", names);
                         out.println("    );");
                     }
 
                     final Set<Entities.Info> converterInfo = converters.entitiesInPackage(pkg);
                     if(!converterInfo.isEmpty())   {
                         out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
-                        WriterUtils.join(out,"      ",".class",Entities.stripNames(converterInfo,false));
+                        join(out, "      ", ".class", Entities.stripNames(converterInfo, false));
                         out.println("    );");
                     }
 
@@ -84,7 +83,7 @@ public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
                     out.println();
 
                     for (String name : names) {
-                        WriterUtils.printProvidesQueryMethod(out, name);
+                        printProvidesQueryMethod(out, name);
                     }
 
 

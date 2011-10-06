@@ -16,14 +16,13 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import com.googlecode.objectify.guice.ClassNameUtils;
-
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.googlecode.objectify.guice.processor.WriterUtils.*;
 import static javax.lang.model.SourceVersion.RELEASE_6;
 
 /**
@@ -45,22 +44,22 @@ public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
     static class MyPackageProcessor implements PackageProcessor {
         @Override
         public void processPackage(final Entities entities,final String pkg,PrintWriterFetcher fetcher) {
-            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, "QueryModule");
+            final String className = uniqueNameFromPackage(pkg, "QueryModule");
 
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
-                    WriterUtils.printClassHeader(out,pkg,className,"com.google.inject.AbstractModule");
+                    printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
 
                     out.println("  @Override");
                     out.println("  public void configure() {}");
                     out.println();
 
-                    for (String name : Entities.stripNames(entities.entitiesInPackage(pkg),false)) {
-                        WriterUtils.printProvidesQueryMethod(out, name);
+                    for (String name : Entities.stripNames(entities.entitiesInPackage(pkg), false)) {
+                        printProvidesQueryMethod(out, name);
                     }
 
-                    WriterUtils.printModuleEqualsAndHashCode(out, className);
+                    printModuleEqualsAndHashCode(out, className);
 
                     out.println("}");
                 }

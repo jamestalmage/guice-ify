@@ -110,4 +110,15 @@ class WriterUtils {
        out.println("  }");
        out.println();
    }
+
+    static String capitalize(String s){
+        StringBuilder sb = new StringBuilder();
+        sb.append(Character.toUpperCase(s.charAt(0)));
+        sb.append(s.substring(1));
+        return sb.toString();
+    }
+
+    static String uniqueNameFromPackage(String pkg, String suffix){
+        return capitalize(pkg.substring(pkg.lastIndexOf(".") + 1))+suffix;
+    }
 }

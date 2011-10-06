@@ -16,14 +16,14 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import com.googlecode.objectify.guice.ClassNameUtils;
-
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.googlecode.objectify.guice.processor.WriterUtils.printClassHeader;
+import static com.googlecode.objectify.guice.processor.WriterUtils.uniqueNameFromPackage;
 import static javax.lang.model.SourceVersion.RELEASE_6;
 
 /**
@@ -47,13 +47,13 @@ public class ObjectifyRegistryProcessor extends ProcessPerPackageProcessor {
         @Override
         public void processPackage(final Entities entities,final String pkg,final PrintWriterFetcher fetcher) {
 
-            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, "ObjectifyRegistry");
+            final String className = uniqueNameFromPackage(pkg, "ObjectifyRegistry");
             String fullName = pkg + "." + className;
             fetcher.getPrintWriter(fullName, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
 
-                    WriterUtils.printClassHeader(out, pkg, className, null);
+                    printClassHeader(out, pkg, className, null);
 
                     out.println("  public static void registerToFactory(com.googlecode.objectify.ObjectifyFactory fact){");
                     final List<String> list = Entities.stripNames(entities.entitiesInPackage(pkg), false);

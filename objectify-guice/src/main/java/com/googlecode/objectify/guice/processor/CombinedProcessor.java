@@ -34,7 +34,6 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 public class CombinedProcessor extends ProcessPerPackageProcessor{
     List<PackageProcessor> processors = Arrays.asList(
             new GuiceModuleBuilder.MyPackageProcessor(),
-            new ObjectifyEntitiesProcessor.MyPackageProcessor(),
             new ObjectifyRegistryProcessor.MyPackageProcessor()
     );
 
