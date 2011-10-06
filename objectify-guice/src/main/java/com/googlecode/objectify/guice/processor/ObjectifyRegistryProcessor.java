@@ -21,6 +21,7 @@ import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static com.googlecode.objectify.guice.processor.WriterUtils.printClassHeader;
 import static com.googlecode.objectify.guice.processor.WriterUtils.uniqueNameFromPackage;
@@ -33,19 +34,25 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
 @SupportedSourceVersion(RELEASE_6)
-public class ObjectifyRegistryProcessor extends ProcessPerPackageProcessor {
+public class ObjectifyRegistryProcessor extends EntityProcessor {
 
-
-    private List<MyPackageProcessor> processors = Arrays.asList(new MyPackageProcessor());
 
     @Override
-    protected Iterable<? extends PackageProcessor> getProcessors() {
-        return processors;
+    protected ProcessedTracker createTracker() {
+        return ProcessedTrackerImpl.perProcessorClass();
+    }
+
+    @Override
+    protected ProcessorChain getProcessors() {
+        return ProcessorChain.builder()
+                .addAnnos("com.googlecode.objectify.annotation.Entity","javax.persistence.Entity")
+                .addProcessors(new MyPackageProcessor())
+                .build();
     }
 
     static class MyPackageProcessor implements PackageProcessor {
         @Override
-        public void processPackage(final Entities entities,final String pkg,final PrintWriterFetcher fetcher) {
+        public void processPackage(final Set<Entities.Info> infoSet,final String pkg,final ProcessorContext fetcher) {
 
             final String className = uniqueNameFromPackage(pkg, "ObjectifyRegistry");
             String fullName = pkg + "." + className;
@@ -56,7 +63,7 @@ public class ObjectifyRegistryProcessor extends ProcessPerPackageProcessor {
                     printClassHeader(out, pkg, className, null);
 
                     out.println("  public static void registerToFactory(com.googlecode.objectify.ObjectifyFactory fact){");
-                    final List<String> list = Entities.stripNames(entities.entitiesInPackage(pkg), false);
+                    final List<String> list = Entities.stripNames(infoSet, false);
                     for (String entity : list) {
                         out.println("    fact.register(" + entity + ".class);");
                     }

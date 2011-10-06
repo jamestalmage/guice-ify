@@ -16,14 +16,12 @@
 
 package com.googlecode.objectify.guice.processor;
 
+
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.googlecode.objectify.guice.processor.WriterUtils.*;
 import static javax.lang.model.SourceVersion.RELEASE_6;
@@ -38,30 +36,35 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
         "javax.persistence.Entity",
         "com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
+public class ObjectifyModuleBuilder extends EntityProcessor{
+
+
     @Override
-    protected Iterable<? extends PackageProcessor> getProcessors() {
-        return null;
+    protected ProcessorChain getProcessors() {
+        return chain;
     }
-    Set<String> converterPackages = new HashSet<String>();
 
-    PackageProcessor converterCollector = new PackageProcessor() {
+    // Set<String> converterPackages = new HashSet<String>();
+
+    static class ConverterCollector implements PackageProcessor {
         @Override
-        public void processPackage(Entities dontUse, String pkg, PrintWriterFetcher fetcher) {
-            converterPackages.add(pkg);
+        public void processPackage(Set<Entities.Info> infoSet, String pkg, ProcessorContext fetcher) {
+            final String key = ConverterCollector.class.getName();
+            fetcher.setAttribute(key + ":" + pkg, infoSet);
+            fetcher.getAttribute(key,new HashSet<String>()).add(pkg);
         }
-    };
+    }
 
-    PackageProcessor outputProcessor = new PackageProcessor() {
+    static class EntityPkgProcessor implements PackageProcessor {
         @Override
-        public void processPackage(final Entities entities, final String pkg, PrintWriterFetcher fetcher) {
+        public void processPackage(final Set<Entities.Info> infoSet, final String pkg, final ProcessorContext fetcher) {
 
             final String className = uniqueNameFromPackage(pkg, "ObjectifyModule");
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
                     printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
-                    final List<String> names = Entities.stripNames(entities.entitiesInPackage(pkg), false);
+                    final List<String> names = Entities.stripNames(infoSet, false);
 
                     out.println("  @Override");
                     out.println("  protected void configure() {");
@@ -72,36 +75,52 @@ public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
                         out.println("    );");
                     }
 
-                    final Set<Entities.Info> converterInfo = converters.entitiesInPackage(pkg);
-                    if(!converterInfo.isEmpty())   {
-                        out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
-                        join(out, "      ", ".class", Entities.stripNames(converterInfo, false));
-                        out.println("    );");
+                    final String key = ConverterCollector.class.getName();
+                    Set<String> converterPackages =  fetcher.getAttribute(key);
+                    if(converterPackages.contains(pkg)){
+                        Set<Entities.Info> converterInfo = fetcher.getAttribute(key + ":" + pkg);
+                        if(!(converterInfo == null || converterInfo.isEmpty()))   {
+                            out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
+                            join(out, "      ", ".class", Entities.stripNames(converterInfo, false));
+                            out.println("    );");
+                        }
+                        converterPackages.remove(pkg);
                     }
-
                     out.println("  }");
                     out.println();
 
                     for (String name : names) {
                         printProvidesQueryMethod(out, name);
                     }
-
-
                     out.println("}");
                 }
             });
         }
-    };
-
-    Entities converters;
-    @Override
-    void postprocessEntities() {
-        Entities javaxEntities = entitiesMap.get("javax.persistence.Entity");
-        Entities ofyEntities = entitiesMap.get("com.googlecode.objectify.annotation.Entity");
-        Entities entities = Entities.merge(javaxEntities,ofyEntities);
-        converters = entitiesMap.get("com.googlecode.objectify.guice.IsConverter");
-
-        postprocessEntities(converters,Arrays.asList(converterCollector));
-        postprocessEntities(entities,Arrays.asList(outputProcessor));
     }
+
+    @Override
+    protected ProcessedTracker createTracker() {
+        return ProcessedTrackerImpl.perProcessorClass();
+    }
+
+    // Entities converters;
+
+    ProcessorChain chain = ProcessorChain.builder()
+            .addAnnos("com.googlecode.objectify.guice.IsConverter")
+            .addProcessors(new ConverterCollector())
+            .addAnnos("javax.persistence.Entity", "com.googlecode.objectify.annotation.Entity")
+            .addProcessors(new EntityPkgProcessor())
+            .addAnnos().addProcessors(new EntityPkgProcessor())
+            .withRunner(new ProcessorChain.LinkRunnerImpl() {
+                @Override
+                protected void runProcessor(PackageProcessor processor, Entities merged, ProcessorContext context) {
+                    final HashSet<String> attribute
+                            = context.getAttribute(ConverterCollector.class.getName(), new HashSet<String>());
+                    for (String pkg : new HashSet<String>(attribute)) {
+                        processor.processPackage(Collections.<Entities.Info>emptySet(),pkg,context);
+                    }
+                }
+
+            })
+            .build();
 }

@@ -31,14 +31,19 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
 @SupportedSourceVersion(RELEASE_6)
-public class CombinedProcessor extends ProcessPerPackageProcessor{
-    List<PackageProcessor> processors = Arrays.asList(
-            new GuiceModuleBuilder.MyPackageProcessor(),
-            new ObjectifyRegistryProcessor.MyPackageProcessor()
-    );
+public class CombinedProcessor extends EntityProcessor{
 
     @Override
-    protected Iterable<? extends PackageProcessor> getProcessors() {
-        return processors;
+    protected ProcessedTracker createTracker() {
+        return ProcessedTrackerImpl.perProcessorClass();
+    }
+
+    @Override
+    protected ProcessorChain getProcessors() {
+        return ProcessorChain.builder()
+                .addAnnos("com.googlecode.objectify.annotation.Entity","javax.persistence.Entity")
+                .addProcessors(new GuiceModuleBuilder.MyPackageProcessor(),
+                              new ObjectifyRegistryProcessor.MyPackageProcessor())
+                .build();
     }
 }

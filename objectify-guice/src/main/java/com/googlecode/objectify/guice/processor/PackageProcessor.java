@@ -16,6 +16,8 @@
 
 package com.googlecode.objectify.guice.processor;
 
+import java.util.Set;
+
 /**
  * User: jamestalmage
  * Date: 10/5/11
@@ -23,5 +25,7 @@ package com.googlecode.objectify.guice.processor;
  */
 interface PackageProcessor {
 
-   void processPackage(final Entities entities,final String pkg, final PrintWriterFetcher fetcher);
+   void processPackage(final Set<Entities.Info> entities,final String pkg, final ProcessorContext fetcher);
+
+
 }

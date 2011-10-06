@@ -18,12 +18,27 @@ package com.googlecode.objectify.guice.processor;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
+import java.util.Set;
 
 /**
  * User: jamestalmage
  * Date: 10/5/11
  * Time: 9:11 PM
  */
-interface PrintWriterFetcher {
+interface ProcessorContext {
     void getPrintWriter(CharSequence src, Element element, Callback<? super PrintWriter> callback);
+
+    public <T> T getAttribute(Object key);
+
+    public <T> T setAttribute(Object key, T value);
+
+    public <T> T getAttribute(Object key, T defaultValue);
+
+    Entities mergeAll();
+
+    Set<String> annotations();
+
+    Entities createMerged(Iterable<String> key);
+
+    ProcessedTracker getTracker();
 }

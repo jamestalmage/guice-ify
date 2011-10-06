@@ -21,6 +21,7 @@ import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static com.googlecode.objectify.guice.processor.WriterUtils.*;
 import static javax.lang.model.SourceVersion.RELEASE_6;
@@ -32,18 +33,25 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
 @SupportedSourceVersion(RELEASE_6)
-public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
+public class GuiceModuleBuilder extends EntityProcessor{
 
-    private List<MyPackageProcessor> processors = Arrays.asList(new MyPackageProcessor());
 
     @Override
-    protected Iterable<? extends PackageProcessor> getProcessors() {
-        return processors;
+    protected ProcessedTracker createTracker() {
+        return ProcessedTrackerImpl.perProcessorClass();
+    }
+
+    @Override
+    protected ProcessorChain getProcessors() {
+        return ProcessorChain.builder()
+                .addAnnos("com.googlecode.objectify.annotation.Entity","javax.persistence.Entity")
+                .addProcessors(new MyPackageProcessor())
+                .build();
     }
 
     static class MyPackageProcessor implements PackageProcessor {
         @Override
-        public void processPackage(final Entities entities,final String pkg,PrintWriterFetcher fetcher) {
+        public void processPackage(final Set<Entities.Info> infoSet,final String pkg,ProcessorContext fetcher) {
             final String className = uniqueNameFromPackage(pkg, "QueryModule");
 
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
@@ -55,7 +63,7 @@ public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
                     out.println("  public void configure() {}");
                     out.println();
 
-                    for (String name : Entities.stripNames(entities.entitiesInPackage(pkg), false)) {
+                    for (String name : Entities.stripNames(infoSet, false)) {
                         printProvidesQueryMethod(out, name);
                     }
 

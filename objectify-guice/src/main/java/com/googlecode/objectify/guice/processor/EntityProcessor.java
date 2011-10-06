@@ -17,7 +17,6 @@ package com.googlecode.objectify.guice.processor;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
@@ -29,14 +28,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static javax.lang.model.SourceVersion.RELEASE_6;
-
 /**
  * User: jamestalmage
  * Date: 6/1/11
  * Time: 7:40 PM
  */
-abstract class EntityProcessor extends AbstractProcessor implements PrintWriterFetcher {
+abstract class EntityProcessor extends AbstractProcessor implements ProcessorContext {
 
     ProcessingEnvironment env;
     //Entities entities = new Entities();
@@ -68,11 +65,26 @@ abstract class EntityProcessor extends AbstractProcessor implements PrintWriterF
         return false;
     }
 
-    abstract void postprocessEntities();
+
+    void postprocessEntities() {
+        getProcessors().run(this);
+    }
+
+    ProcessedTracker tracker = null;
+    public ProcessedTracker getTracker(){
+        if(tracker == null){
+            tracker = createTracker();
+        }
+        return tracker;
+    }
+
+    protected abstract ProcessedTracker createTracker();
+
+    protected abstract ProcessorChain getProcessors();
 
     void processEntities(TypeElement currAnnotaion,Iterable<? extends Element> entities){
         for (Element entity : entities) {
-            processEntity(currAnnotaion,entity);
+            processEntity(currAnnotaion, entity);
         }
     }
 
@@ -103,4 +115,44 @@ abstract class EntityProcessor extends AbstractProcessor implements PrintWriterF
         }
     }
 
+    @Override
+    public <T> T getAttribute(Object key) {
+        return (T) attributes.get(key);
+    }
+
+    @Override
+    public <T> T getAttribute(Object key, T defaultValue) {
+        T att = getAttribute(key);
+        if(att == null){
+            att = defaultValue;
+            setAttribute(key,att);
+        }
+        return att;
+    }
+
+    @Override
+    public <T> T setAttribute(Object key, T value) {
+        return (T) attributes.put(key,value);
+    }
+
+    Map attributes = new HashMap();
+
+    @Override
+    public Entities mergeAll() {
+        return Entities.merge(entitiesMap.values());
+    }
+
+    @Override
+    public Set<String> annotations(){
+        return entitiesMap.keySet();
+    }
+
+    @Override
+    public Entities createMerged(Iterable<String> key) {
+        Set<Entities> entities = new HashSet<Entities>();
+        for (String s : key) {
+            entities.add(entitiesMap.get(s));
+        }
+        return Entities.merge(entities);
+    }
 }
