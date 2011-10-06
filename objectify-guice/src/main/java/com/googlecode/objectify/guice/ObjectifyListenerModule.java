@@ -51,7 +51,7 @@ public abstract class ObjectifyListenerModule extends AbstractModule{
     }
 
     protected List<String> getSuffixes(){
-        return Arrays.asList(ObjectifyEntities.SUFFIX,AbstractQueryModule.SUFFIX);
+        return Arrays.asList(ObjectifyEntities.SUFFIX,"QueryModule");
     }
 
     protected void bindPackage(String pkg) {

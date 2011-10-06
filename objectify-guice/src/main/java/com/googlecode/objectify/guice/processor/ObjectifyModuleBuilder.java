@@ -16,7 +16,6 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import com.googlecode.objectify.guice.AbstractQueryModule;
 import com.googlecode.objectify.guice.ClassNameUtils;
 
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -62,44 +61,32 @@ public class ObjectifyModuleBuilder extends ProcessPerPackageProcessor{
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
-                    out.println("package " + pkg + ";");
-                    out.println();
-                    out.println("public class " + className + " extends com.googlecode.objectify.guice.AbstractQueryModule{");
-                    out.println();
-                    out.println("  @Override");
-                    out.println("  protected void config() {");
-                    out.println("    install(new com.googlecode.objectify.guice.ObjectifyFactoryListenerModule());");
-                    out.print("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindEntities(binder()");
-                    for(String s: Entities.stripNames(entities.entitiesInPackage(pkg),true)){
-                        out.println(",");
-                        out.print("      ");
-                        out.print(s);
-                        out.print(".class");
-                    }
-                    out.println();
-                    out.println("    );");
+                    WriterUtils.printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
+                    final List<String> names = Entities.stripNames(entities.entitiesInPackage(pkg), false);
 
-                    for (String s : Entities.stripNames(entities.entitiesInPackage(pkg), true)) {
-                        out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<" + s + ">>(){}," + s + ".class);");
+                    out.println("  @Override");
+                    out.println("  protected void configure() {");
+                    out.println("    install(new com.googlecode.objectify.guice.ObjectifyFactoryListenerModule());");
+                    if(!names.isEmpty()){
+                        out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindEntities(binder(),");
+                        WriterUtils.join(out,"      ",".class",names);
+                        out.println("    );");
                     }
 
                     final Set<Entities.Info> converterInfo = converters.entitiesInPackage(pkg);
                     if(!converterInfo.isEmpty())   {
-                        out.print("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder()");
-                        for(String s : Entities.stripNames(converterInfo,true)){
-                            out.println(",");
-                            out.print("      ");
-                            out.print(s);
-                            out.print(".class");
-                        }
-                    out.println();
-                    out.println("    );");
+                        out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
+                        WriterUtils.join(out,"      ",".class",Entities.stripNames(converterInfo,false));
+                        out.println("    );");
                     }
-
-
 
                     out.println("  }");
                     out.println();
+
+                    for (String name : names) {
+                        WriterUtils.printProvidesQueryMethod(out, name);
+                    }
+
 
                     out.println("}");
                 }

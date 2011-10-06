@@ -16,7 +16,6 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import com.googlecode.objectify.guice.AbstractQueryModule;
 import com.googlecode.objectify.guice.ClassNameUtils;
 
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -46,24 +45,19 @@ public class GuiceModuleBuilder extends ProcessPerPackageProcessor{
     static class MyPackageProcessor implements PackageProcessor {
         @Override
         public void processPackage(final Entities entities,final String pkg,PrintWriterFetcher fetcher) {
-            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, AbstractQueryModule.SUFFIX);
+            final String className = ClassNameUtils.uniqueNameFromPackage(pkg, "QueryModule");
 
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
-                    out.println("package " + pkg + ";");
-                    out.println();
-                    out.println("public final class " + className + " extends com.google.inject.AbstractModule {");
-                    out.println();
+                    WriterUtils.printClassHeader(out,pkg,className,"com.google.inject.AbstractModule");
+
                     out.println("  @Override");
                     out.println("  public void configure() {}");
                     out.println();
 
-                    for (Entities.Info info : entities.entitiesInPackage(pkg)) {
-
-                        final String name = info.getName();
+                    for (String name : Entities.stripNames(entities.entitiesInPackage(pkg),false)) {
                         WriterUtils.printProvidesQueryMethod(out, name);
-                        //out.println("    bindQuery(new com.google.inject.TypeLiteral<com.googlecode.objectify.Query<" + s + ">>(){}," + s + ".class);");
                     }
 
                     WriterUtils.printModuleEqualsAndHashCode(out, className);
