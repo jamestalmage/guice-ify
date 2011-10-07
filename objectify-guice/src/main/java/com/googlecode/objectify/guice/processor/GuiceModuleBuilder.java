@@ -42,7 +42,7 @@ public class GuiceModuleBuilder extends EntityProcessor{
     }
 
     @Override
-    protected ProcessorChain getProcessors() {
+    protected ProcessorChain createChain() {
         return ProcessorChain.builder()
                 .addAnnos("com.googlecode.objectify.annotation.Entity","javax.persistence.Entity")
                 .addProcessors(new MyPackageProcessor())

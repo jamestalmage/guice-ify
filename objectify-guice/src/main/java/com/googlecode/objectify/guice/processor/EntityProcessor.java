@@ -80,7 +80,16 @@ abstract class EntityProcessor extends AbstractProcessor implements ProcessorCon
 
     protected abstract ProcessedTracker createTracker();
 
-    protected abstract ProcessorChain getProcessors();
+    ProcessorChain lazyChain;
+    final ProcessorChain getProcessors(){
+        if(lazyChain == null){
+            lazyChain = createChain();
+        }
+        return lazyChain;
+    }
+
+    protected abstract ProcessorChain createChain();
+
 
     void processEntities(TypeElement currAnnotaion,Iterable<? extends Element> entities){
         for (Element entity : entities) {
@@ -151,7 +160,14 @@ abstract class EntityProcessor extends AbstractProcessor implements ProcessorCon
     public Entities createMerged(Iterable<String> key) {
         Set<Entities> entities = new HashSet<Entities>();
         for (String s : key) {
-            entities.add(entitiesMap.get(s));
+            final Entities e = entitiesMap.get(s);
+
+            if(e == null){
+                new NullPointerException().fillInStackTrace().printStackTrace();
+                throw  new NullPointerException(s + " not found");
+
+            }
+            entities.add(e);
         }
         return Entities.merge(entities);
     }

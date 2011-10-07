@@ -20,6 +20,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static javax.lang.model.SourceVersion.RELEASE_6;
@@ -29,21 +30,25 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  * Date: 10/5/11
  * Time: 9:44 PM
  */
-@SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
+@SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity","com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class CombinedProcessor extends EntityProcessor{
+public class CombinedProcessor extends EntitiesAndConvertersProcessor{
+
+    GuiceModuleBuilder.MyPackageProcessor guiceProcessor = new GuiceModuleBuilder.MyPackageProcessor();
+    ObjectifyRegistryProcessor.MyPackageProcessor ofyProcessor = new ObjectifyRegistryProcessor.MyPackageProcessor();
 
     @Override
-    protected ProcessedTracker createTracker() {
-        return ProcessedTrackerImpl.perProcessorClass();
+    protected Collection<? extends PackageProcessor> createConverterProcessors() {
+        return Arrays.asList(ofyProcessor);
     }
 
     @Override
-    protected ProcessorChain getProcessors() {
-        return ProcessorChain.builder()
-                .addAnnos("com.googlecode.objectify.annotation.Entity","javax.persistence.Entity")
-                .addProcessors(new GuiceModuleBuilder.MyPackageProcessor(),
-                              new ObjectifyRegistryProcessor.MyPackageProcessor())
-                .build();
+    protected Collection<? extends PackageProcessor> createEntityProcessors() {
+        return Arrays.asList(ofyProcessor,guiceProcessor);
+    }
+
+    @Override
+    protected ProcessedTracker createTracker() {
+        return ProcessedTrackerImpl.identityTracker();
     }
 }

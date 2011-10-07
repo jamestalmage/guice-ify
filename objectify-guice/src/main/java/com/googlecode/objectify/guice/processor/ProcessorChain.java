@@ -141,6 +141,19 @@ public class ProcessorChain {
             if(this.processors == null){
                 this.processors = new HashSet<PackageProcessor>();
             }
+            if(procs == null) {
+                System.out.println("Null array");
+                 new NullPointerException().fillInStackTrace().printStackTrace();
+
+
+            }
+            for(PackageProcessor proc : procs){
+                if(proc == null) {
+                    System.out.println("added null processor");
+                    new NullPointerException().fillInStackTrace().printStackTrace();
+                    throw new NullPointerException();
+                }
+            }
             this.processors.addAll(Arrays.asList(procs));
             return this;
         }
