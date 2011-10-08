@@ -75,7 +75,7 @@ public class ExampleTest {
                    Adding ExampleQueryModule twice here is intentional
                    we've implemented equals and hash code in such a way that the second instance is ignored
                     */
-                }, new ExampleQueryModule(),new ExampleQueryModule());
+                }, new ExampleNoDepModule(),new ExampleNoDepModule());
         objectify = injector.getProvider(Objectify.class);
         objectify.get().put(
                 new MyEntity("b", "World, "),

@@ -31,7 +31,7 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity","com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class CombinedProcessor extends EntitiesAndConvertersBuilder {
+public class CombinedBuilder extends EntitiesAndConvertersBuilder {
 
     @Override
     protected Collection<? extends Processor> createProcessors() {
