@@ -21,7 +21,6 @@ import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import static com.googlecode.objectify.guice.processor.WriterUtils.*;
@@ -37,27 +36,28 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
         "javax.persistence.Entity",
         "com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class NoDepModuleBuilder extends EntitiesAndConvertersProcessor {
-    @Override
-    protected Collection<? extends PackageProcessor> createConverterProcessors() {
-        return Arrays.asList(
-                new MyPackageProcessor()
-        );
-    }
+public class NoDepModuleBuilder extends EntitiesAndConvertersBuilder {
 
     @Override
-    protected Collection<? extends PackageProcessor> createEntityProcessors() {
-        return createConverterProcessors();
+    protected Collection<? extends Processor> createProcessors() {
+        return Arrays.asList(new ObjectifyRegistryProcessor(), new MyPackageProcessor());
     }
 
-    static class MyPackageProcessor implements PackageProcessor {
+    static class MyPackageProcessor implements Processor {
         @Override
-        public void processPackage(final Set<Entities.Info> entities, final String pkg, final ProcessorContext fetcher) {
+        public void process(final ProcessorInfo info) {
+            final String pkg = info.getPackageName();
+            ProcessorContext fetcher = info.getContext();
+
             final String className = uniqueNameFromPackage(pkg, "NoDepModule");
+
+            final String registryName = uniqueNameFromPackage(pkg, "ObjectifyRegistry");
 
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
+                    final Set<Entities.Info> entities = info.getEntities();
+                    //final Set<Entities.Info> converters = info.getConverters();
                     printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
 
                     out.println("  @Override");
@@ -65,24 +65,22 @@ public class NoDepModuleBuilder extends EntitiesAndConvertersProcessor {
                     out.println("    requestInjection(new Object(){");
                     out.println("      @com.google.inject.Inject");
                     out.println("      public void setFactory(com.googlecode.objectify.ObjectifyFactory fact){");
+                    out.print("        ");
+                    out.print(registryName);
+                    out.println(".register(fact);");
 
-                    for (String entity : Entities.stripNames(entities,false)) {
+                    /*for (String entity : Entities.stripNames(entities,false)) {
                         out.println("        fact.register(" + entity + ".class);");
                     }
 
-                    Set<String> converterPackages =  fetcher.getAttribute(CONVERTER_KEY);
-                    if(converterPackages.contains(pkg)){
-                        Set<Entities.Info> converterInfo = fetcher.getAttribute(CONVERTER_KEY + ":" + pkg);
-                        if(converterInfo != null){
-                            out.println();
-                            out.println("        com.googlecode.objectify.impl.conv.Conversions conversions = fact.getConversions();");
-                            out.println();
-                            for (String converter : Entities.stripNames(converterInfo, false)) {
-                                out.println("        conversions.add(new " +  converter+ "());");
-                            }
+                    if(!converters.isEmpty()){
+                        out.println();
+                        out.println("        com.googlecode.objectify.impl.conv.Conversions conversions = fact.getConversions();");
+                        out.println();
+                        for (String converter : Entities.stripNames(converters, false)) {
+                            out.println("        conversions.add(new " +  converter+ "());");
                         }
-                        converterPackages.remove(pkg);
-                    }
+                    }   */
 
                     out.println("      }");
                     out.println("    });");

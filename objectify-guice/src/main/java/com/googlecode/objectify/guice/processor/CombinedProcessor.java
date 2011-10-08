@@ -21,7 +21,6 @@ import javax.annotation.processing.SupportedSourceVersion;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import static javax.lang.model.SourceVersion.RELEASE_6;
 
@@ -32,19 +31,15 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity","com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class CombinedProcessor extends EntitiesAndConvertersProcessor{
-
-    GuiceModuleBuilder.MyPackageProcessor guiceProcessor = new GuiceModuleBuilder.MyPackageProcessor();
-    ObjectifyRegistryProcessor.MyPackageProcessor ofyProcessor = new ObjectifyRegistryProcessor.MyPackageProcessor();
+public class CombinedProcessor extends EntitiesAndConvertersBuilder {
 
     @Override
-    protected Collection<? extends PackageProcessor> createConverterProcessors() {
-        return Arrays.asList(ofyProcessor);
-    }
-
-    @Override
-    protected Collection<? extends PackageProcessor> createEntityProcessors() {
-        return Arrays.asList(ofyProcessor,guiceProcessor);
+    protected Collection<? extends Processor> createProcessors() {
+        return Arrays.asList(
+                new ObjectifyRegistryProcessor(),
+                new NoDepModuleBuilder.MyPackageProcessor(),
+                new ObjectifyModuleBuilder.EntityPkgProcessor()
+        );
     }
 
     @Override

@@ -16,111 +16,77 @@
 
 package com.googlecode.objectify.guice.processor;
 
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static com.googlecode.objectify.guice.processor.EntitiesAndConvertersBuilder.CONVERTER_KEY;
 import static com.googlecode.objectify.guice.processor.WriterUtils.printClassHeader;
 import static com.googlecode.objectify.guice.processor.WriterUtils.uniqueNameFromPackage;
-import static javax.lang.model.SourceVersion.RELEASE_6;
 
 /**
  * User: jamestalmage
  * Date: 6/2/11
  * Time: 10:06 PM
  */
-@SupportedAnnotationTypes({"com.googlecode.objectify.annotation.Entity","javax.persistence.Entity"})
-@SupportedSourceVersion(RELEASE_6)
-public class ObjectifyRegistryProcessor extends EntitiesAndConvertersProcessor {
-
+public class ObjectifyRegistryProcessor implements EntitiesAndConvertersBuilder.Processor {
 
     @Override
-    protected ProcessedTracker createTracker() {
-        return ProcessedTrackerImpl.perProcessorClass();
-    }
+    public void process(final EntitiesAndConvertersBuilder.ProcessorInfo info) {
+        final String pkg = info.getPackageName();
+        ProcessorContext fetcher = info.getContext();
+        final String className = uniqueNameFromPackage(pkg, "ObjectifyRegistry");
+        String fullName = pkg + "." + className;
+        fetcher.getPrintWriter(fullName, null, new Callback<PrintWriter>() {
+            @Override
+            public void call(PrintWriter out) throws Exception {
 
-    List<? extends PackageProcessor> processors = Arrays.asList(new MyPackageProcessor());
+                printClassHeader(out, pkg, className, null);
 
-    @Override
-    protected Collection<? extends PackageProcessor> createConverterProcessors() {
-        return processors;
-    }
-
-    @Override
-    protected Collection<? extends PackageProcessor> createEntityProcessors() {
-        return processors;
-    }
-
-
-    static class MyPackageProcessor implements PackageProcessor {
-        @Override
-        public void processPackage(final Set<Entities.Info> infoSet,final String pkg,final ProcessorContext fetcher) {
-
-            final String className = uniqueNameFromPackage(pkg, "ObjectifyRegistry");
-            String fullName = pkg + "." + className;
-            fetcher.getPrintWriter(fullName, null, new Callback<PrintWriter>() {
-                @Override
-                public void call(PrintWriter out) throws Exception {
-
-                    printClassHeader(out, pkg, className, null);
-
-                    out.println("  public static void registerEntities(com.googlecode.objectify.ObjectifyFactory fact){");
-                    final List<String> list = Entities.stripNames(infoSet, false);
-                    for (String entity : list) {
-                        out.println("    fact.register(" + entity + ".class);");
-                    }
-                    out.println("  }");
-                    out.println();
-
-                    out.println("  public static void registerConverters(com.googlecode.objectify.ObjectifyFactory fact){");
-                    out.println("    com.googlecode.objectify.impl.conv.Conversions conversions = fact.getConversions();");
-
-                    Set<String> converterPackages =  fetcher.getAttribute(CONVERTER_KEY);
-                    if(converterPackages.contains(pkg)){
-                        Set<Entities.Info> converterInfo = fetcher.getAttribute(CONVERTER_KEY + ":" + pkg);
-                        if(converterInfo != null){
-                            for (String converter : Entities.stripNames(converterInfo, false)) {
-                                out.println("    conversions.add(new " +  converter+ "());");
-                            }
-                        }
-                        converterPackages.remove(pkg);
-                    }
-                    out.println("  }");
-                    out.println();
-
-
-                    out.println("  public static void registerEntities(){");
-                    out.println("    registerEntities(com.googlecode.objectify.ObjectifyService.factory());");
-                    out.println("  }");
-                    out.println();
-
-
-                    out.println("  public static void registerConverters(){");
-                    out.println("    registerConverters(com.googlecode.objectify.ObjectifyService.factory());");
-                    out.println("  }");
-                    out.println();
-
-                    out.println("  public static void register(com.googlecode.objectify.ObjectifyFactory fact){");
-                    out.println("    registerEntities(fact);");
-                    out.println("    registerConverters(fact);");
-                    out.println("  }");
-                    out.println();
-
-
-                    out.println("  public static void register(){");
-                    out.println("    register(com.googlecode.objectify.ObjectifyService.factory());");
-                    out.println("  }");
-                    out.println();
-
-                    out.println("}");
-
+                out.println("  public static void registerEntities(com.googlecode.objectify.ObjectifyFactory fact){");
+                final List<String> list = Entities.stripNames(info.getEntities(), false);
+                for (String entity : list) {
+                    out.println("    fact.register(" + entity + ".class);");
                 }
-            });
-        }
+                out.println("  }");
+                out.println();
 
+                out.println("  public static void registerConverters(com.googlecode.objectify.ObjectifyFactory fact){");
+                out.println("    com.googlecode.objectify.impl.conv.Conversions conversions = fact.getConversions();");
+
+                for (String converter : Entities.stripNames(info.getConverters(), false)) {
+                    out.println("    conversions.add(new " +  converter+ "());");
+                }
+                out.println("  }");
+                out.println();
+
+
+                out.println("  public static void registerEntities(){");
+                out.println("    registerEntities(com.googlecode.objectify.ObjectifyService.factory());");
+                out.println("  }");
+                out.println();
+
+
+                out.println("  public static void registerConverters(){");
+                out.println("    registerConverters(com.googlecode.objectify.ObjectifyService.factory());");
+                out.println("  }");
+                out.println();
+
+                out.println("  public static void register(com.googlecode.objectify.ObjectifyFactory fact){");
+                out.println("    registerEntities(fact);");
+                out.println("    registerConverters(fact);");
+                out.println("  }");
+                out.println();
+
+
+                out.println("  public static void register(){");
+                out.println("    register(com.googlecode.objectify.ObjectifyService.factory());");
+                out.println("  }");
+                out.println();
+
+                out.println("}");
+
+            }
+        });
     }
 }

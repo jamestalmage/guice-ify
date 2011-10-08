@@ -17,6 +17,8 @@
 package com.googlecode.objectify.guice.processor;
 
 
+import com.googlecode.objectify.annotation.Entity;
+
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 
@@ -36,31 +38,28 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
         "javax.persistence.Entity",
         "com.googlecode.objectify.guice.IsConverter"})
 @SupportedSourceVersion(RELEASE_6)
-public class ObjectifyModuleBuilder extends EntitiesAndConvertersProcessor{
-    @Override
-    protected Collection<? extends PackageProcessor> createConverterProcessors() {
-        return processors;
-    }
+public class ObjectifyModuleBuilder extends EntitiesAndConvertersBuilder {
 
     @Override
-    protected Collection<? extends PackageProcessor> createEntityProcessors() {
-        return processors;
+    protected Collection<? extends Processor> createProcessors() {
+        return Arrays.asList(new EntityPkgProcessor());
     }
 
-    List<EntityPkgProcessor> processors = Arrays.asList(new EntityPkgProcessor());
-    // Set<String> converterPackages = new HashSet<String>();
 
+    static class EntityPkgProcessor implements Processor {
 
-    static class EntityPkgProcessor implements PackageProcessor {
         @Override
-        public void processPackage(final Set<Entities.Info> infoSet, final String pkg, final ProcessorContext fetcher) {
+        public void process(final ProcessorInfo info) {
+            final String pkg = info.getPackageName();
 
             final String className = uniqueNameFromPackage(pkg, "ObjectifyModule");
+            ProcessorContext fetcher = info.getContext();
+
             fetcher.getPrintWriter(pkg + "." + className, null, new Callback<PrintWriter>() {
                 @Override
                 public void call(PrintWriter out) throws Exception {
                     printClassHeader(out, pkg, className, "com.google.inject.AbstractModule");
-                    final List<String> names = Entities.stripNames(infoSet, false);
+                    final List<String> names = Entities.stripNames(info.getEntities(), false);
 
                     out.println("  @Override");
                     out.println("  protected void configure() {");
@@ -71,15 +70,11 @@ public class ObjectifyModuleBuilder extends EntitiesAndConvertersProcessor{
                         out.println("    );");
                     }
 
-                    Set<String> converterPackages =  fetcher.getAttribute(CONVERTER_KEY);
-                    if(converterPackages.contains(pkg)){
-                        Set<Entities.Info> converterInfo = fetcher.getAttribute(CONVERTER_KEY + ":" + pkg);
-                        if(!(converterInfo == null || converterInfo.isEmpty()))   {
-                            out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
-                            join(out, "      ", ".class", Entities.stripNames(converterInfo, false));
-                            out.println("    );");
-                        }
-                        converterPackages.remove(pkg);
+                    Set<Entities.Info> converters = info.getConverters();
+                    if(!converters.isEmpty())   {
+                        out.println("    com.googlecode.objectify.guice.ObjectifyFactoryListenerModule.bindConverters(binder(),");
+                        join(out, "      ", ".class", Entities.stripNames(converters, false));
+                        out.println("    );");
                     }
                     out.println("  }");
                     out.println();

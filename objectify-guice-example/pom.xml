@@ -107,8 +107,7 @@
                         <processor>com.googlecode.objectify.guice.processor.CombinedProcessor</processor>
                         <processor>com.googlecode.objectify.guice.processor.ObjectifyModuleBuilder</processor>
                         <processor>com.googlecode.objectify.guice.processor.NoDepModuleBuilder</processor>
-                        <!--<processor>com.googlecode.objectify.guice.processor.GuiceModuleBuilder</processor>
-                        <processor>com.googlecode.objectify.guice.processor.ObjectifyRegistryProcessor</processor> -->
+                        <!--<processor>com.googlecode.objectify.guice.processor.ObjectifyRegistryProcessor</processor> -->
                     </annotationProcessors>
                 </configuration>
             </plugin>
